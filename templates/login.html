@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>持明法洲后台管理系统</title>
+    <link rel="stylesheet" href="{% static 'boot/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'jqgrid/css/trirand/ui.jqgrid-bootstrap.css' %}">
+    <script type="text/javascript" src="{% static 'boot/js/jquery-2.2.1.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'boot/js/bootstrap.min.js' %}"></script>
+    <script src="http://static.runoob.com/assets/jquery-validation-1.14.0/lib/jquery.js"></script>
+    <script src="http://static.runoob.com/assets/jquery-validation-1.14.0/dist/jquery.validate.min.js"></script>
+    <script src="http://static.runoob.com/assets/jquery-validation-1.14.0/dist/localization/messages_zh.js"></script>
+
+
+    <!--发送按钮倒计时代码-->
+    <script type="text/javascript">
+
+        var countdown = 60;
+
+        function settime(obj) {
+            var mobile = $('#mobile').val();
+            var myreg = /^[1][3,4,5,7,8,9][0-9]{9}$/;
+            if (myreg.test(mobile)) {
+                if (countdown == 0) {
+                    obj.removeAttribute("disabled");
+                    obj.value = "免费获取验证码";
+                    countdown = 60;
+                    return;
+                } else {
+                    obj.setAttribute("disabled", true);
+                    obj.value = "重新发送(" + countdown + ")";
+                    countdown--;
+                }
+                setTimeout(function () {
+                        settime(obj)
+                    }
+                    , 1000)
+            }else {
+                alert('手机号未输入或输入有误')
+            }
+
+            $(function () {
+                // 点击获取验证码， 向后台发送请求验证码
+                $('#forcode').click(function () {
+                    var mobile = $('#mobile').val();
+                    // 向后台发送ajax请求获取验证码
+                    $.ajax({
+                        url: "{% url 'main:getcode' %}",
+                        type: "POST",
+                        data:"mobile="+mobile,
+                        {#data: {mobile: $("#mobile").val()},       // 将手机号参数传至后台#}
+                        success: function (data) {
+                            console.log(data);
+                            alert(data)
+                        }
+                    });
+
+                    // 用户发起登录请求
+                    $("#loginButtonId").click(function () {
+                        var mobile = $('#mobile').val();
+                        var code = $('#code').val();
+                        console.log(mobile);
+                        console.log(code);
+                        $.ajax({
+                            url: "{% url "main:check_user"%}",
+                            data: "mobile=" + mobile + "&code=" + code,
+                            type: "post",
+                            success: function (data) {
+                                console.log(data);
+                                if (data === '登陆成功...') {
+                                    location.href = '{% url "main:index" %}'
+
+                                }
+
+                            }
+                        });
+
+
+                    })
+
+                });
+
+            });
+        }
+
+
+    </script>
+    {#    jQuery Validate 将校验规则写到 js 代码中#}
+    <script>
+        $().ready(function () {
+            $('#loginForm').validate({
+                rules: {
+                    mobile: {
+                        required: true,
+                        rangelength: [11, 11],
+
+                    },
+                    name: {
+                        required: true,
+                        minlength: 3,
+
+                    },
+                    code: {
+                        required: true,
+                        minlength: 6,
+                    }
+
+
+                },
+                messages: {
+                    mobile: {
+                        required: '请输入手机号',
+                        rangelength: '输入有误',
+                    },
+                    name: {
+                        required: '请输入名字',
+                        minlength: '至少输入三位'
+                    },
+                    code: {
+                        required: '请输入验证码',
+                        minlength: '请输入六位验证码'
+                    },
+                },
+            })
+        })
+    </script>
+
+</head>
+
+
+<body>
+
+<!--手机号码输入框代码-->
+<div class="container">
+    <div class="form-group">
+        <div class="col-lg-10">
+            <form id="loginForm" role="form" action="" method="post" class="form-horizontal">
+
+                <label for="mobile" class="">手机号码:</label>
+                <div class="input-group m-bot15">
+                    <input type="text" class="form-control" required id="mobile" name="mobile" placeholder="手机号码">
+                    <span class="input-group-btn">
+                         <input type="button" id="forcode" onclick="settime(this)" value="免费获取验证码"
+                                class="btn btn-success">
+                        </span>
+                </div>
+
+                <p class="help-block">请填写绑定手机号</p>
+                <label for="basic-url" class="">用户名</label>
+                <div class="input-group" style="width: 100%">
+                    <input type="text" class="form-control" id="basic-url" name="name">
+
+                </div>
+                <label for="basic-url" class="">验证码：</label>
+                <div class="input-group" style="width: 100%">
+                    <input type="text" class="form-control" id="basic-url" name="code">
+                </div>
+                <div class="input-group">
+                    <input class="btn btn-success" type="button" id="loginButtonId" value="登录">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
